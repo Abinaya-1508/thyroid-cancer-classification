@@ -1,0 +1,5 @@
+Image,CNN Prediction,CNN Confidence (%),Stage Prediction,Stage Confidence (%),Overall Confidence (%)
+C:\Users\ABINAYA\Desktop\project\thyroid_dataset\test_images\f.jpg,FTC,91.54,I,72.77,66.62
+C:\Users\ABINAYA\Desktop\project\thyroid_dataset\test_images\folli.jpg,FTC,84.51,I,75.14,63.49
+C:\Users\ABINAYA\Desktop\project\thyroid_dataset\test_images\pap.jpg,PTC,97.75,I,71.09,69.5
+C:\Users\ABINAYA\Desktop\project\thyroid_dataset\test_images\papil.jpg,PTC,79.96,I,69.67,55.71
