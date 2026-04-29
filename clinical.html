@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Clinical Data</title>
+    <style>
+        body { font-family: 'Segoe UI'; background: linear-gradient(135deg,#eef2f3,#d9e4f5); }
+        .container { width: 900px; margin: 40px auto; background:white; padding:25px; border-radius:12px; }
+        .grid { display:grid; grid-template-columns: repeat(auto-fit,minmax(180px,1fr)); gap:15px; }
+        input { padding:8px; border-radius:6px; border:1px solid #ccc; }
+        button { margin-top:20px; padding:10px 20px; background:#2c3e50; color:white; border:none; border-radius:6px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <h2>🧾 Enter Clinical Parameters</h2>
+    <form action="/predict" method="POST">
+        <div class="grid">
+        {% for f in features %}
+            <div>
+                <label>{{f.replace('_',' ')}}</label>
+                <input type="number" step="any" name="{{f}}" required>
+            </div>
+        {% endfor %}
+        </div>
+        <div style="text-align:center">
+            <button type="submit">🔬 Analyze Case</button>
+        </div>
+    </form>
+</div>
+</body>
+</html>

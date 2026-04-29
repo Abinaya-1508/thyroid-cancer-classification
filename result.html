@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Thyroid Cancer Diagnosis Dashboard</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0;
+            background: linear-gradient(135deg, #c3ecf7, #f5f7fa);
+            color: #2c3e50;
+            overflow-x: hidden;
+        }
+
+        .container {
+            width: 95%;
+            max-width: 1300px;
+            margin: 30px auto;
+        }
+
+        h1 {
+            text-align: center;
+            padding: 20px;
+            border-radius: 14px;
+            background: linear-gradient(90deg, #4facfe, #00f2fe);
+            color: white;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+            letter-spacing: 1px;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(330px, 1fr));
+            gap: 25px;
+            margin-top: 25px;
+        }
+
+        .card {
+            background: rgba(255,255,255,0.7);
+            backdrop-filter: blur(14px);
+            padding: 22px;
+            border-radius: 18px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.08);
+            animation: fadeUp 0.7s ease;
+        }
+
+        @keyframes fadeUp {
+            from {opacity:0; transform: translateY(25px);}
+            to {opacity:1; transform: translateY(0);}
+        }
+
+        img {
+            width: 100%;
+            border-radius: 14px;
+            margin-top: 12px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.1);
+        }
+
+        .badge {
+            padding: 7px 16px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+        }
+        .ptc { background: linear-gradient(90deg,#2193b0,#6dd5ed); }
+        .ftc { background: linear-gradient(90deg,#ff416c,#ff4b2b); }
+
+        /* Circular Progress */
+        .circle {
+            width: 130px;
+            height: 130px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 20px;
+            color: #333;
+            margin: 10px auto;
+            background: conic-gradient(#4facfe calc(var(--value)*1%), #e0e0e0 0);
+        }
+
+        .section-title {
+            font-weight: bold;
+            margin-bottom: 12px;
+            font-size: 18px;
+        }
+
+        ul { padding-left: 20px; line-height: 1.8; }
+
+        .risk-gauge {
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+            color: white;
+            font-weight: bold;
+            font-size: 20px;
+        }
+        .low { background: #43a047; }
+        .moderate { background: #fb8c00; }
+        .high { background: #e53935; }
+
+        .timeline {
+            border-left: 4px solid #4facfe;
+            padding-left: 15px;
+            margin-top: 10px;
+        }
+        .timeline div {
+            margin-bottom: 10px;
+        }
+
+        .button-bar {
+            text-align: center;
+            margin-top: 30px;
+        }
+
+        .btn {
+            padding: 12px 26px;
+            border-radius: 30px;
+            border: none;
+            margin: 8px;
+            font-size: 15px;
+            cursor: pointer;
+            color: white;
+            background: linear-gradient(90deg,#667eea,#764ba2);
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            transition: 0.3s;
+        }
+        .btn:hover { transform: scale(1.05); }
+
+        footer {
+            text-align: center;
+            margin: 25px;
+            font-size: 13px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🧬 AI Thyroid Cancer Diagnosis Dashboard</h1>
+
+    <div class="grid">
+        <div class="card">
+            <div class="section-title">📷 Uploaded Image</div>
+            <img src="{{ url_for('static', filename='uploads/' + filename) }}">
+        </div>
+
+        <div class="card">
+            <div class="section-title">📊 Prediction Summary</div>
+            Diagnosis:
+            <span class="badge {{ 'ftc' if result.Diagnosis=='FTC' else 'ptc' }}">{{ result.Diagnosis }}</span><br><br>
+            Stage: <b>{{ result.Predicted_Stage }}</b>
+
+            <div class="circle" style="--value:{{result.CNN_Confidence}}">{{result.CNN_Confidence}}%</div>
+            CNN Confidence
+
+            <div class="circle" style="--value:{{result.Stage_Confidence}}">{{result.Stage_Confidence}}%</div>
+            Stage Confidence
+
+            <div class="circle" style="--value:{{result.Overall_Confidence}}">{{result.Overall_Confidence}}%</div>
+            Overall Confidence
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="section-title">🧾 Clinical Case Summary</div>
+        The AI predicts <b>{{ result.Diagnosis }}</b> at <b>Stage {{ result.Predicted_Stage }}</b> with <b>{{ result.Risk_Level }}</b> risk of recurrence.
+    </div>
+
+    <div class="card">
+        <div class="section-title">🩺 Treatment Recommendations</div>
+        <ul>{% for r in result.Recommendations %}<li>{{ r }}</li>{% endfor %}</ul>
+    </div>
+
+    <div class="grid">
+        <div class="card">
+            <div class="section-title">⚠ AI Risk Gauge</div>
+            <div class="risk-gauge {{ result.Risk_Level|lower }}">{{ result.Risk_Level }}</div>
+            Recurrence Probability: {{ result.Recurrence }}
+        </div>
+
+        <div class="card">
+            <div class="section-title">🧠 AI Clinical Insights</div>
+            <ul>{% for f in result.XAI_Factors %}<li>{{ f }}</li>{% endfor %}</ul>
+        </div>
+    </div>
+
+    {% if result.Next_Stage %}
+    <div class="card">
+        <div class="section-title">📈 Disease Progression Timeline</div>
+        <div class="timeline">
+            <div><b>Current:</b> Stage {{ result.Predicted_Stage }}</div>
+            <div><b>Next Stage ({{ result.Next_Stage }}):</b></div>
+            <ul>{% for s in result.Next_Stage_Symptoms %}<li>{{ s }}</li>{% endfor %}</ul>
+        </div>
+    </div>
+    {% endif %}
+
+    <div class="card">
+        <div class="section-title">⏳ Monitoring & Follow-Up Plan</div>
+        <ul>
+            <li>Regular thyroid function tests</li>
+            <li>Ultrasound every 6–12 months</li>
+            <li>Whole body scan if metastasis risk is high</li>
+            <li>Consult endocrinologist regularly</li>
+        </ul>
+    </div>
+
+    <div class="button-bar">
+        <button onclick="window.location.href='/'" class="btn">🔄 Analyze New Image</button>
+        <button onclick="window.print()" class="btn">📄 Download Medical Report</button>
+    </div>
+
+    <footer>
+        ⚕ This AI system is for research support only and not a replacement for professional diagnosis.
+    </footer>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>AI Thyroid Cancer Diagnosis</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #eef2f3, #d9e4f5);
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            width: 90%;
+            max-width: 1100px;
+            margin: 30px auto;
+            background: white;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        h1 {
+            text-align: center;
+            color: #2c3e50;
+        }
+        h2 { color: #34495e; }
+
+        .section { margin-top: 25px; }
+
+        .card {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 20px rgba(0,0,0,0.15);
+        }
+
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .confidence-bar {
+            height: 20px;
+            border-radius: 20px;
+            background: #ddd;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+        .confidence-fill {
+            height: 100%;
+            text-align: right;
+            padding-right: 8px;
+            color: white;
+            font-size: 12px;
+            line-height: 20px;
+            width: 0;
+            animation: fillBar 1.2s forwards;
+        }
+        @keyframes fillBar {
+            0% { width: 0; }
+            100% { width: var(--fill-width); }
+        }
+        .cnn { background: linear-gradient(90deg, #36d1dc, #5b86e5); }
+        .stage { background: linear-gradient(90deg, #f7971e, #ffd200); color: black; }
+        .overall { background: linear-gradient(90deg, #11998e, #38ef7d); }
+
+        .badge {
+            padding: 6px 12px;
+            border-radius: 20px;
+            color: white;
+            font-weight: bold;
+            display: inline-block;
+        }
+        .ftc { background: #e74c3c; }
+        .ptc { background: #3498db; }
+
+        img {
+            max-width: 100%;
+            border-radius: 12px;
+            box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+            transition: transform 0.3s ease;
+        }
+        img:hover { transform: scale(1.03); }
+
+        ul { padding-left: 20px; }
+        .error { color: red; text-align: center; font-weight: bold; }
+
+        .form-section input {
+            padding: 6px;
+            margin: 4px;
+            width: 120px;
+        }
+
+        button {
+            padding: 10px 20px;
+            border-radius: 6px;
+            border: none;
+            background: #2c3e50;
+            color: white;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+        button:hover { background: #34495e; }
+
+        footer {
+            text-align: center;
+            margin-top: 30px;
+            font-size: 13px;
+            color: #777;
+        }
+        .upload-box { margin-bottom: 15px; }
+
+        /* Section Color Themes */
+        .highlight-card { background: linear-gradient(135deg, #e8f5e9, #f1f8e9); border-left: 6px solid #4caf50; }
+        .risk-card { background: linear-gradient(135deg, #fff3e0, #ffe0b2); border-left: 6px solid #fb8c00; }
+        .xai-card { background: linear-gradient(135deg, #e3f2fd, #bbdefb); border-left: 6px solid #1e88e5; }
+        .warning-card { background: linear-gradient(135deg, #ffebee, #ffcdd2); border-left: 6px solid #e53935; }
+        .summary-card { background: linear-gradient(135deg, #f3e5f5, #ede7f6); border-left: 6px solid #8e24aa; }
+
+        /* Risk Badges */
+        .risk-badge { padding: 5px 12px; border-radius: 20px; font-weight: bold; color: white; }
+        .risk-badge.high { background: #e53935; }
+        .risk-badge.medium { background: #fb8c00; }
+        .risk-badge.low { background: #43a047; }
+
+        /* Lists */
+        .styled-list { padding-left: 18px; line-height: 1.7; font-size: 14px; }
+
+        /* Subtext */
+        .small-note { font-size: 13px; color: #555; margin-bottom: 8px; }
+
+        /* Hover Effect */
+        .card:hover { transform: translateY(-3px); transition: 0.3s ease; box-shadow: 0 10px 18px rgba(0,0,0,0.12); }
+
+        .input-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-top: 10px; }
+        .input-group { display: flex; flex-direction: column; }
+        .input-group label { font-size: 13px; font-weight: 600; color: #2c3e50; margin-bottom: 4px; }
+        .summary-card { background: linear-gradient(135deg, #f3e5f5, #ede7f6); border-left: 6px solid #8e24aa; }
+        .input-group input { padding: 8px; border-radius: 6px; border: 1px solid #ccd6dd; background: #fdfefe; transition: all 0.2s ease; }
+        .input-group input:focus { border-color: #5b86e5; box-shadow: 0 0 4px rgba(91,134,229,0.4); outline: none; }
+
+        /* Collapsible Sections */
+        .collapsible {
+            background: #f1f1f1;
+            color: #2c3e50;
+            cursor: pointer;
+            padding: 10px 15px;
+            width: 100%;
+            border: none;
+            text-align: left;
+            outline: none;
+            font-size: 14px;
+            border-radius: 6px;
+            margin-top: 10px;
+            transition: background 0.3s ease;
+        }
+        .active, .collapsible:hover { background-color: #dbe9f7; }
+
+        .content { padding: 0 15px; display: none; overflow: hidden; font-size: 14px; }
+
+        /* Tooltip */
+        .tooltip { position: relative; display: inline-block; cursor: pointer; }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 220px;
+            background-color: #2c3e50;
+            color: #fff;
+            text-align: left;
+            padding: 6px 8px;
+            border-radius: 6px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            transform: translateX(-50%);
+            opacity: 0;
+            transition: opacity 0.3s;
+            font-size: 12px;
+        }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>🧬 AI-Based Thyroid Cancer Diagnosis System</h1>
+
+    {% if error %}
+        <p class="error">{{ error }}</p>
+    {% endif %}
+
+    <!-- ================= FORM ================= -->
+    <div class="section">
+        <form method="POST" enctype="multipart/form-data" class="form-section">
+
+    <h3>📤 Upload Histopathology Image</h3>
+    <div class="upload-box">
+        <input type="file" name="image" required>
+    </div>
+
+    <h3>🧾 Enter Clinical Parameters</h3>
+
+    <div class="input-grid">
+        {% for feature in [
+            "Family_History","Radiation_Exposure","BMI","Smoking_History",
+            "Alcohol_Consumption","TSH_Receptor_Mutation","BRAF_Mutation",
+            "RET_PTC_Mutation","Metastasis","Age","TSH_Level","T3_Level","T4_Level"] %}
+            
+            <div class="input-group">
+                <label>{{ feature.replace('_',' ') }}</label>
+                <input type="number" step="any" name="{{feature}}" required>
+            </div>
+
+        {% endfor %}
+    </div>
+
+    <div style="text-align:center; margin-top:20px;">
+        <button type="submit">🔬 Analyze Case</button>
+    </div>
+</form>
+
+    </div>
+
+    {% if result %}
+    <!-- ================= RESULTS ================= -->
+    <div class="section">
+        <h2>🔍 Diagnosis Result</h2>
+
+        <div class="result-grid">
+
+            <!-- Uploaded Image -->
+            <div class="card">
+                <h3>Uploaded Histopathology Image</h3>
+                {% if filename %}
+                <div style="text-align:center;">
+                    <img src="{{ url_for('static', filename='uploads/' + filename) }}" alt="Uploaded Image">
+                </div>
+                {% endif %}
+            </div>
+<div class="card">
+    <h3>🔬 Histopathology Image Analysis</h3>
+    <p>The CNN model examined tissue structures, nuclear morphology, and abnormal follicular patterns to determine malignancy.</p>
+</div>
+
+            <!-- Summary -->
+            <div class="card">
+                <h3>Prediction Summary</h3>
+                <p>Diagnosis:
+                    <span class="badge {{ 'ftc' if result.Diagnosis=='FTC' else 'ptc' }}">
+                        {{ result.Diagnosis }}
+                    </span>
+                </p>
+                <p>Stage: <strong>{{ result.Predicted_Stage }}</strong></p>
+
+                <p>CNN Confidence</p>
+                <div class="confidence-bar">
+                    <div class="confidence-fill cnn" style="--fill-width:{{result.CNN_Confidence}}%">
+                        {{result.CNN_Confidence}}%
+                    </div>
+                </div>
+
+                <p>Stage Confidence</p>
+                <div class="confidence-bar">
+                    <div class="confidence-fill stage" style="--fill-width:{{result.Stage_Confidence}}%">
+                        {{result.Stage_Confidence}}%
+                    </div>
+                </div>
+
+                <p>Overall Confidence</p>
+                <div class="confidence-bar">
+                    <div class="confidence-fill overall" style="--fill-width:{{result.Overall_Confidence}}%">
+                        {{result.Overall_Confidence}}%
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="card">
+    <h3>📊 AI Confidence Interpretation</h3>
+    <ul class="styled-list">
+        <li><strong>Above 85%</strong> → Very strong model certainty</li>
+        <li><strong>70–85%</strong> → Reliable prediction</li>
+        <li><strong>50–70%</strong> → Moderate confidence</li>
+        <li><strong>Below 50%</strong> → Needs further medical validation</li>
+    </ul>
+</div>
+
+<div class="card summary-card">
+    <h3>🧾 Clinical Case Summary</h3>
+    <p>
+        The AI analysis suggests <strong>{{ result.Diagnosis }}</strong> 
+        at <strong>Stage {{ result.Predicted_Stage }}</strong> with 
+        <strong>{{ result.Risk_Level }} risk</strong> of recurrence.
+        Clinical and imaging indicators contributed to this assessment.
+    </p>
+</div>
+
+        <!-- 🌿 Medical Recommendations -->
+<div class="card highlight-card">
+    <h3>🩺 Personalized Treatment Recommendations</h3>
+    <ul class="styled-list">
+        {% for item in result.Recommendations %}
+            <li class="tooltip">✔ {{ item }}
+                <span class="tooltiptext">Recommendation detail or tip</span>
+            </li>
+        {% endfor %}
+    </ul>
+</div>
+
+<div class="result-grid">
+<div class="card">
+    <h3>🎯 Treatment Goals</h3>
+    <ul class="styled-list">
+        <li>Remove malignant thyroid tissue</li>
+        <li>Prevent recurrence and metastasis</li>
+        <li>Maintain hormone balance post-treatment</li>
+        <li>Improve long-term survival rate</li>
+    </ul>
+</div>
+
+    <!-- ⚠ Risk Assessment -->
+    <div class="card risk-card">
+        <h3>⚠ Risk Assessment</h3>
+        <p>
+            <strong>Risk Level:</strong>
+            <span class="risk-badge {{ result.Risk_Level|lower }}">
+                {{ result.Risk_Level }}
+            </span>
+        </p>
+
+        <p><strong>Recurrence Probability:</strong></p>
+        <div class="confidence-bar">
+            <div class="confidence-fill stage"
+                 style="--fill-width:{{ result.Recurrence.split('–')[1].replace('%','') }}%">
+                {{ result.Recurrence }}
+            </div>
+        </div>
+    </div>
+<div class="card risk-card">
+    <h3>📊 Recurrence Risk Meter</h3>
+    <div style="height:20px; background:#eee; border-radius:20px; overflow:hidden;">
+        <div style="width:{{ result.Recurrence.split('–')[1].replace('%','') }}%; 
+                    background:linear-gradient(90deg,#43a047,#fdd835,#e53935);
+                    height:100%;
+                    transition: width 1.2s ease-in-out;"></div>
+    </div>
+    <p style="font-size:13px;">Green = Low Risk • Red = High Risk</p>
+</div>
+
+    <!-- 🧠 AI Explanation -->
+    <div class="card xai-card">
+        <button type="button" class="collapsible">🧠 AI Clinical Insights</button>
+        <div class="content">
+            <ul class="styled-list">
+                {% for factor in result.XAI_Factors %}
+                    <li>🔍 {{ factor }}</li>
+                {% endfor %}
+            </ul>
+        </div>
+    </div>
+
+</div>
+
+<!-- 📈 Disease Progression -->
+{% if result.Next_Stage %}
+<div class="card warning-card">
+    <button type="button" class="collapsible">📈 Possible Disease Progression → Stage {{ result.Next_Stage }}</button>
+    <div class="content">
+        <p class="small-note">If untreated, the condition may advance with the following symptoms:</p>
+        <ul class="styled-list">
+            {% for symptom in result.Next_Stage_Symptoms %}
+                <li>⚕ {{ symptom }}</li>
+            {% endfor %}
+        </ul>
+    </div>
+</div>
+{% endif %}
+<div class="card">
+    <h3>⏳ Monitoring & Follow-Up</h3>
+    <ul class="styled-list">
+        <li>Regular thyroid function tests (TSH, T3, T4)</li>
+        <li>Neck ultrasound every 6–12 months</li>
+        <li>Whole body scan if metastasis risk is high</li>
+        <li>Endocrinologist consultation recommended</li>
+    </ul>
+</div>
+<div style="text-align:center; margin-top:20px;">
+    <button onclick="window.print()">📄 Download Medical Report</button>
+</div>
+
+    </div>
+    {% endif %}
+
+    <footer>
+       <div class="card" style="background:#fafafa; font-size:13px; color:#555;">
+    ⚕ <strong>Disclaimer:</strong> This AI system is developed for research and educational purposes. 
+    It does not replace professional medical diagnosis. Always consult a certified medical practitioner.
+</div>
+    </footer>
+
+</div>
+
+<script>
+    // Collapsible
+    var coll = document.getElementsByClassName("collapsible");
+    for (let i = 0; i < coll.length; i++) {
+        coll[i].addEventListener("click", function() {
+            this.classList.toggle("active");
+            var content = this.nextElementSibling;
+            if (content.style.display === "block") { content.style.display = "none"; }
+            else { content.style.display = "block"; }
+        });
+    }
+</script>
+
+</body>
+</html>
