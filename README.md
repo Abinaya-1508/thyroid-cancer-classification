@@ -81,29 +81,6 @@ This project aims to:
 * Matplotlib, Seaborn
 
 
-📂 Project Structure
-
-thyroid-cancer-classification/
-│
-├── dataset/
-│   ├── FTC/
-│   ├── PTC/
-│   └── Invalid/
-│
-├── model/
-│   └── trained_model.h5
-│
-├── notebooks/
-│   └── training.ipynb
-│
-├── results/
-│   ├── accuracy_plot.png
-│   ├── confusion_matrix.png
-│
-├── README.md
-└── requirements.txt
-
-
 ▶️ How to Run the Project
 
 🔹 Step 1: Clone Repository
